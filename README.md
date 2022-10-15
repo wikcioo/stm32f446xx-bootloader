@@ -3,7 +3,7 @@
 ## Supported bootloader commands
 | Implemented | Host Command      | Command Code | BL Reply                 | Description                                              |
 | ----------- | ----------------- | ------------ | ------------------------ | -------------------------------------------------------- |
-| NO          | BL_GET_VER        | 0xA1         | Version (1 byte)         | Get the bootloader version                               |
+| YES         | BL_GET_VER        | 0xA1         | Version (1 byte)         | Get the bootloader version                               |
 | NO          | BL_GET_HELP       | 0xA2         | Commands (10 bytes)      | Get all commands supported by the bootloader             |
 | NO          | BL_GET_CID        | 0xA3         | Id (2 bytes)             | Get chip identification number                           |
 | NO          | BL_GET_RDP_STATUS | 0xA4         | Level (1 byte)           | Get FLASH read protection level                          |
