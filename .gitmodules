@@ -1,0 +1,3 @@
+[submodule "drivers/stm32f446xx"]
+	path = drivers/stm32f446xx
+	url = https://github.com/wikcioo/stm32f446xx-baremetal-drivers.git
