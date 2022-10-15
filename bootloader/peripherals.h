@@ -2,6 +2,7 @@
 #define __PERIPHERALS_H__
 
 #include "stm32f446xx.h"
+#include "stm32f446xx_rcc.h"
 #include "stm32f446xx_gpio.h"
 #include "stm32f446xx_usart.h"
 #include "stm32f4xx_systick.h"
@@ -84,6 +85,11 @@ void init_usart3(void)
     usart3.config.hw_flow_control = USART_HW_FLOW_CONTROL_NONE;
 
     usart_init(&usart3);
+}
+
+void init_crc(void)
+{
+    CRC_CLK_ENABLE();
 }
 
 #endif
