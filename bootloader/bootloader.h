@@ -20,8 +20,14 @@
 #define CRC_STATUS_FAILURE 1
 
 #define BL_GET_VER      0xA1
+#define BL_GET_HELP     0xA2
+
+uint8_t supported_commands[] = {
+    0xA1, 0xA2
+};
 
 void bootloader_cmd_get_version(uint8_t *buffer);
+void bootloader_cmd_get_help(uint8_t *buffer);
 
 void bootloader_goto_application(void);
 void bootloader_start_interactive_mode(void);

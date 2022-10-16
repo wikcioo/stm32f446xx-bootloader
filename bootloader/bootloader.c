@@ -59,6 +59,11 @@ void bootloader_start_interactive_mode(void)
         case BL_GET_VER:
             bootloader_cmd_get_version(rx_buffer);
             break;
+        case BL_GET_HELP:
+            bootloader_cmd_get_help(rx_buffer);
+            break;
+        default:
+            debug_printf("BOOTLOADER_DEBUG: Error {Unknown command}\n");
         }
     }
 }
@@ -96,6 +101,26 @@ void bootloader_cmd_get_version(uint8_t *buffer)
         debug_printf("BOOTLOADER_DEBUG: BL_VERSION = %d (%#X)\n", bl_version, bl_version);
         bootloader_send_ack(1);
         bootloader_send_data(&bl_version, 1);
+    }
+    else
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum failed!\n");
+        bootloader_send_nack();
+    }
+}
+
+void bootloader_cmd_get_help(uint8_t *buffer)
+{
+    uint32_t packet_length = buffer[0] + 1;
+    uint32_t host_crc = *(uint32_t *)(buffer + packet_length - 4);
+
+    debug_printf("BOOTLOADER_DEBUG: Called bootloader_cmd_get_help.\n");
+    if (!bootloader_verify_crc(buffer, packet_length - 4, host_crc))
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum approved!\n");
+        uint8_t length = sizeof(supported_commands);
+        bootloader_send_ack(length);
+        bootloader_send_data(supported_commands, length);
     }
     else
     {
