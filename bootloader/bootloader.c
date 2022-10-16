@@ -24,8 +24,6 @@ int main()
 
 void bootloader_goto_application(void)
 {
-    void (*application_reset_handler)(void);
-
     debug_printf("BOOTLOADER_DEBUG: Executing bootloader_goto_application.\n");
 
     /* We assume that the application firmware is stored in sector 2 of the flash memory */
@@ -36,9 +34,9 @@ void bootloader_goto_application(void)
     __asm volatile("MSR MSP, %0"::"r"(msp));
 
     uint32_t reset_handler_addr = *(volatile uint32_t *)(FLASH_SECTOR2_BASE_ADDR + 0x4);
-    application_reset_handler = (void *)reset_handler_addr;
-    debug_printf("BOOTLOADER_DEBUG: Application reset handler address = %#X\n", application_reset_handler);
+    void (*application_reset_handler)(void) = (void *)reset_handler_addr;
 
+    debug_printf("BOOTLOADER_DEBUG: Application reset handler address = %#X\n", application_reset_handler);
     application_reset_handler();
 }
 
@@ -68,6 +66,9 @@ void bootloader_start_interactive_mode(void)
         case BL_GET_RDP_LEVEL:
             bootloader_cmd_get_rdp_level(rx_buffer);
             break;
+        case BL_JMP_ADDR:
+            bootloader_cmd_jump_address(rx_buffer);
+            break;
         default:
             debug_printf("BOOTLOADER_DEBUG: Error {Unknown command}\n");
         }
@@ -91,6 +92,19 @@ uint8_t bootloader_verify_crc(uint8_t *data, uint32_t length, uint32_t host_crc)
     }
 
     return CRC_STATUS_FAILURE;
+}
+
+uint8_t bootloader_verify_address(uint32_t address)
+{
+    if (
+        (address >= FLASH_BASE_ADDR && address <= FLASH_END_ADDR) ||
+        (address >= SRAM1_BASE_ADDR && address <= SRAM1_END_ADDR) ||
+        (address >= SRAM2_BASE_ADDR && address <= SRAM2_END_ADDR)
+    ) {
+        return VALID_ADDR;
+    }
+
+    return INVALID_ADDR;
 }
 
 void bootloader_cmd_get_version(uint8_t *buffer)
@@ -169,6 +183,47 @@ void bootloader_cmd_get_rdp_level(uint8_t *buffer)
         debug_printf("BOOTLOADER_DEBUG: RDP LEVEL = %#X\n", rdp_level);
         bootloader_send_ack(1);
         bootloader_send_data(&rdp_level, 1);
+    }
+    else
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum failed!\n");
+        bootloader_send_nack();
+    }
+}
+
+void bootloader_cmd_jump_address(uint8_t *buffer)
+{
+    uint32_t packet_length = buffer[0] + 1;
+    uint32_t host_crc = *(uint32_t *)(buffer + packet_length - 4);
+
+    debug_printf("BOOTLOADER_DEBUG: Called bootloader_cmd_jump_address.\n");
+
+    if (!bootloader_verify_crc(buffer, packet_length - 4, host_crc))
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum approved!\n");
+        bootloader_send_ack(1);
+
+        uint32_t jump_addr = *(uint32_t *)(buffer + 2);
+        debug_printf("BOOTLOADER_DEBUG: Jump address = %#X\n", jump_addr);
+        if (bootloader_verify_address(jump_addr) == VALID_ADDR)
+        {
+            uint8_t valid_addr = VALID_ADDR;
+            bootloader_send_data(&valid_addr, 1);
+
+            debug_printf("BOOTLOADER_DEBUG: Valid. Jumping to %#X.\n", jump_addr);
+
+            /* Ensure that the last bit in the address is set for it to be a THUMB instruction */
+            jump_addr |= 1; 
+
+            void (*jump_address)(void) = (void *)jump_addr;
+            jump_address();
+        }
+        else
+        {
+            debug_printf("BOOTLOADER_DEBUG: Invalid address!\n");
+            uint8_t invalid_addr = INVALID_ADDR;
+            bootloader_send_data(&invalid_addr, 1);
+        }
     }
     else
     {
