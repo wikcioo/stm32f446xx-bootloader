@@ -6,7 +6,7 @@
 | YES         | BL_GET_VER        | 0xA1         | Version (1 byte)         | Get the bootloader version                               |
 | YES         | BL_GET_HELP       | 0xA2         | Commands (x bytes)       | Get all commands supported by the bootloader             |
 | YES         | BL_GET_DEV_ID     | 0xA3         | Id (2 bytes)             | Get device identification number                         |
-| NO          | BL_GET_RDP_STATUS | 0xA4         | Level (1 byte)           | Get FLASH read protection level                          |
+| YES         | BL_GET_RDP_LEVEL  | 0xA4         | Level (1 byte)           | Get FLASH read protection level                          |
 | NO          | BL_JMP_ADDR       | 0xA5         | Error Code (1 byte)      | Jump to specified address                                |
 | NO          | BL_FLASH_ERASE    | 0xA6         | Error Code (1 byte)      | Erase sector(s) of the FLASH                             |
 | NO          | BL_MEM_WRITE      | 0xA7         | Error Code (1 byte)      | Write to dirrerent memories of the MCU                   |

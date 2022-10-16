@@ -19,17 +19,19 @@
 #define CRC_STATUS_SUCCESS 0
 #define CRC_STATUS_FAILURE 1
 
-#define BL_GET_VER      0xA1
-#define BL_GET_HELP     0xA2
-#define BL_GET_DEV_ID   0xA3
+#define BL_GET_VER          0xA1
+#define BL_GET_HELP         0xA2
+#define BL_GET_DEV_ID       0xA3
+#define BL_GET_RDP_LEVEL    0xA4
 
 uint8_t supported_commands[] = {
-    0xA1, 0xA2, 0xA3
+    BL_GET_VER, BL_GET_HELP, BL_GET_DEV_ID, BL_GET_RDP_LEVEL
 };
 
 void bootloader_cmd_get_version(uint8_t *buffer);
 void bootloader_cmd_get_help(uint8_t *buffer);
 void bootloader_cmd_get_device_id(uint8_t *buffer);
+void bootloader_cmd_get_rdp_level(uint8_t *buffer);
 
 void bootloader_goto_application(void);
 void bootloader_start_interactive_mode(void);
@@ -40,6 +42,7 @@ void bootloader_send_nack();
 
 uint8_t bootloader_verify_crc(uint8_t *data, uint32_t length, uint32_t host_crc);
 uint8_t bootloader_get_version();
+uint8_t bootloader_get_rdp_level();
 uint16_t bootloader_get_device_id();
 
 #endif

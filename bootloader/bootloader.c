@@ -65,6 +65,9 @@ void bootloader_start_interactive_mode(void)
         case BL_GET_DEV_ID:
             bootloader_cmd_get_device_id(rx_buffer);
             break;
+        case BL_GET_RDP_LEVEL:
+            bootloader_cmd_get_rdp_level(rx_buffer);
+            break;
         default:
             debug_printf("BOOTLOADER_DEBUG: Error {Unknown command}\n");
         }
@@ -141,10 +144,31 @@ void bootloader_cmd_get_device_id(uint8_t *buffer)
     if (!bootloader_verify_crc(buffer, packet_length - 4, host_crc))
     {
         debug_printf("BOOTLOADER_DEBUG: CRC checksum approved!\n");
-        bootloader_send_ack(2);
         uint16_t dev_id = bootloader_get_device_id();
         debug_printf("BOOTLOADER_DEBUG: DEVICE_ID = %#X\n", dev_id);
+        bootloader_send_ack(2);
         bootloader_send_data((uint8_t *)&dev_id, 2);
+    }
+    else
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum failed!\n");
+        bootloader_send_nack();
+    }
+}
+
+void bootloader_cmd_get_rdp_level(uint8_t *buffer)
+{
+    uint32_t packet_length = buffer[0] + 1;
+    uint32_t host_crc = *(uint32_t *)(buffer + packet_length - 4);
+
+    debug_printf("BOOTLOADER_DEBUG: Called bootloader_cmd_get_rdp_level.\n");
+    if (!bootloader_verify_crc(buffer, packet_length - 4, host_crc))
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum approved!\n");
+        uint8_t rdp_level = bootloader_get_rdp_level();
+        debug_printf("BOOTLOADER_DEBUG: RDP LEVEL = %#X\n", rdp_level);
+        bootloader_send_ack(1);
+        bootloader_send_data(&rdp_level, 1);
     }
     else
     {
@@ -180,6 +204,12 @@ void bootloader_send_nack()
 uint8_t bootloader_get_version()
 {
     return (uint8_t)BL_VERSION;
+}
+
+uint8_t bootloader_get_rdp_level()
+{
+    volatile uint32_t *option_bytes = (uint32_t *)0x1FFFC000U;
+    return (uint8_t)((*option_bytes >> 8) & 0xFF);
 }
 
 uint16_t bootloader_get_device_id()
