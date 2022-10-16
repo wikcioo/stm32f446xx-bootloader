@@ -21,13 +21,15 @@
 
 #define BL_GET_VER      0xA1
 #define BL_GET_HELP     0xA2
+#define BL_GET_DEV_ID   0xA3
 
 uint8_t supported_commands[] = {
-    0xA1, 0xA2
+    0xA1, 0xA2, 0xA3
 };
 
 void bootloader_cmd_get_version(uint8_t *buffer);
 void bootloader_cmd_get_help(uint8_t *buffer);
+void bootloader_cmd_get_device_id(uint8_t *buffer);
 
 void bootloader_goto_application(void);
 void bootloader_start_interactive_mode(void);
@@ -35,7 +37,9 @@ void bootloader_send_data(uint8_t *tx_data, uint32_t length);
 void bootloader_receive_data(uint8_t *rx_data, uint32_t length);
 void bootloader_send_ack(uint8_t length_to_follow);
 void bootloader_send_nack();
+
 uint8_t bootloader_verify_crc(uint8_t *data, uint32_t length, uint32_t host_crc);
 uint8_t bootloader_get_version();
+uint16_t bootloader_get_device_id();
 
 #endif
