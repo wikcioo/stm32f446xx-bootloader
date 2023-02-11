@@ -69,6 +69,8 @@ void bootloader_start_interactive_mode(void)
         case BL_JMP_ADDR:
             bootloader_cmd_jump_address(rx_buffer);
             break;
+        case BL_FLASH_ERASE:
+            bootloader_cmd_flash_erase(rx_buffer);
         default:
             debug_printf("BOOTLOADER_DEBUG: Error {Unknown command}\n");
         }
@@ -232,6 +234,28 @@ void bootloader_cmd_jump_address(uint8_t *buffer)
     }
 }
 
+void bootloader_cmd_flash_erase(uint8_t *buffer)
+{
+    uint32_t packet_length = buffer[0] + 1;
+    uint32_t host_crc = *(uint32_t *)(buffer + packet_length - 4);
+
+    debug_printf("BOOTLOADER_DEBUG: Called bootloader_cmd_flash_erase.\n");
+
+    if (bootloader_verify_crc(buffer, packet_length - 4, host_crc) == CRC_STATUS_SUCCESS)
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum approved!\n");
+        bootloader_send_ack(1);
+
+        uint8_t status = bootloader_flash_erase(buffer[2], buffer[3]);
+        bootloader_send_data(&status, 1);
+    }
+    else
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum failed!\n");
+        bootloader_send_nack();
+    }
+}
+
 void bootloader_send_data(uint8_t *tx_data, uint32_t length)
 {
     usart_transmit(&BL_UART, tx_data, length);
@@ -250,24 +274,55 @@ void bootloader_send_ack(uint8_t length_to_follow)
     bootloader_send_data(buffer, 2);
 }
 
-void bootloader_send_nack()
+void bootloader_send_nack(void)
 {
     uint8_t nack = BL_NACK;
     bootloader_send_data(&nack, 1);
 }
 
-uint8_t bootloader_get_version()
+uint8_t bootloader_get_version(void)
 {
     return (uint8_t)BL_VERSION;
 }
 
-uint8_t bootloader_get_rdp_level()
+uint8_t bootloader_get_rdp_level(void)
 {
     volatile uint32_t *option_bytes = (uint32_t *)0x1FFFC000U;
     return (uint8_t)((*option_bytes >> 8) & 0xFF);
 }
 
-uint16_t bootloader_get_device_id()
+uint16_t bootloader_get_device_id(void)
 {
     return (uint16_t)(DBGMCU->IDCODE & 0x0FFF);
+}
+
+uint8_t bootloader_flash_erase(uint8_t base_sector_number, uint8_t num_of_sectors)
+{
+    if (base_sector_number == 0xFF)
+    {
+        /* Perform mass erase */
+        debug_printf("BOOTLOADER_DEBUG: Performing mass erase of flash memory.\n");
+        flash_init();
+        flash_mass_erase();
+        return ERASE_SUCCESS;
+    }
+
+    if (
+        base_sector_number < FLASH_SECTOR_0_NUMBER ||
+        base_sector_number > FLASH_SECTOR_7_NUMBER ||
+        num_of_sectors > FLASH_SECTOR_7_NUMBER - base_sector_number)
+    {
+        debug_printf("BOOTLOADER_DEBUG: Incorrect parameters for flash erase.\n");
+        return ERASE_FAILURE;
+    }
+
+    debug_printf("BOOTLOADER_DEBUG: Erasing %d sectors starting from %d.\n", num_of_sectors, base_sector_number);
+    flash_init();
+    for (uint8_t i = base_sector_number; i < base_sector_number + num_of_sectors; i++)
+    {
+        flash_sector_erase(i);
+        debug_printf("BOOTLOADER_DEBUG: Erased %d sector.\n", i);
+    }
+
+    return ERASE_SUCCESS;
 }
