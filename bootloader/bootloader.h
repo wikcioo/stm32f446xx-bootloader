@@ -11,7 +11,6 @@
 /* Version 1.0 */
 #define BL_VERSION 0x10
 #define BL_RX_BUFFER_SIZE       1024
-#define FLASH_SECTOR2_BASE_ADDR 0x08008000U
 
 /* STM32F466xx memory addresses */
 #define SRAM1_SIZE      (112 * 1024)                      // 112KB of SRAM1

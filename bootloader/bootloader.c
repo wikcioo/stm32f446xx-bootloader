@@ -27,13 +27,13 @@ void bootloader_goto_application(void)
     debug_printf("BOOTLOADER_DEBUG: Executing bootloader_goto_application.\n");
 
     /* We assume that the application firmware is stored in sector 2 of the flash memory */
-    uint32_t msp = *(volatile uint32_t *)FLASH_SECTOR2_BASE_ADDR;
+    uint32_t msp = *(volatile uint32_t *)FLASH_SECTOR_2_BASE_ADDR;
     debug_printf("BOOTLOADER_DEBUG: MSP value = %#X\n", msp);
 
     /* Set main stack pointer */
     __asm volatile("MSR MSP, %0"::"r"(msp));
 
-    uint32_t reset_handler_addr = *(volatile uint32_t *)(FLASH_SECTOR2_BASE_ADDR + 0x4);
+    uint32_t reset_handler_addr = *(volatile uint32_t *)(FLASH_SECTOR_2_BASE_ADDR + 0x4);
     void (*application_reset_handler)(void) = (void *)reset_handler_addr;
 
     debug_printf("BOOTLOADER_DEBUG: Application reset handler address = %#X\n", application_reset_handler);
