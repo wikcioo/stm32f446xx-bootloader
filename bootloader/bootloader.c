@@ -71,6 +71,7 @@ void bootloader_start_interactive_mode(void)
             break;
         case BL_FLASH_ERASE:
             bootloader_cmd_flash_erase(rx_buffer);
+            break;
         default:
             debug_printf("BOOTLOADER_DEBUG: Error {Unknown command}\n");
         }
