@@ -1,5 +1,6 @@
 #include "bootloader.h"
 #include "stm32f446xx_crc.h"
+#include <stdlib.h>
 
 int main()
 {
@@ -71,6 +72,9 @@ void bootloader_start_interactive_mode(void)
             break;
         case BL_FLASH_ERASE:
             bootloader_cmd_flash_erase(rx_buffer);
+            break;
+        case BL_MEM_READ:
+            bootloader_cmd_mem_read(rx_buffer);
             break;
         default:
             debug_printf("BOOTLOADER_DEBUG: Error {Unknown command}\n");
@@ -249,6 +253,40 @@ void bootloader_cmd_flash_erase(uint8_t *buffer)
 
         uint8_t status = bootloader_flash_erase(buffer[2], buffer[3]);
         bootloader_send_data(&status, 1);
+    }
+    else
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum failed!\n");
+        bootloader_send_nack();
+    }
+}
+
+void bootloader_cmd_mem_read(uint8_t *buffer)
+{
+    uint32_t packet_length = buffer[0] + 1;
+    uint32_t host_crc = *(uint32_t *)(buffer + packet_length - 4);
+
+    debug_printf("BOOTLOADER_DEBUG: Called bootloader_cmd_mem_read.\n");
+
+    if (bootloader_verify_crc(buffer, packet_length - 4, host_crc) == CRC_STATUS_SUCCESS)
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum approved!\n");
+
+        uint32_t base_address = *(uint32_t *)(buffer + 2);
+        uint32_t length = buffer[6];
+
+        bootloader_send_ack(length + 1);
+
+        debug_printf("BOOTLOADER_DEBUG: Address: %#x, Length: %d.\n", base_address, length);
+
+        uint8_t *response_buffer = (uint8_t *)malloc(length + 1);
+
+        flash_init();
+        uint8_t status = flash_read(base_address, &response_buffer[1], length);
+        response_buffer[0] = status;
+
+        debug_printf("BOOTLOADER_DEBUG: Flash read status: %s.\n", status == FLASH_SUCCESS ? "success" : "fail");
+        bootloader_send_data(response_buffer, length + 1);
     }
     else
     {
