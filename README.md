@@ -9,6 +9,6 @@
 | YES         | BL_GET_RDP_LEVEL  | 0xA4         | Level (1 byte)           | Get FLASH read protection level                          |
 | YES         | BL_JMP_ADDR       | 0xA5         | Error Code (1 byte)      | Jump to specified address                                |
 | YES         | BL_FLASH_ERASE    | 0xA6         | Error Code (1 byte)      | Erase sector(s) of the FLASH                             |
-| IN PROGRESS | BL_MEM_WRITE      | 0xA7         | Error Code (1 byte)      | Write to FLASH memory of the MCU                         |
+| YES         | BL_MEM_WRITE      | 0xA7         | Error Code (1 byte)      | Write to FLASH memory of the MCU                         |
 | YES         | BL_MEM_READ       | 0xA8         | Memory Content (x bytes) | Read from FLASH memory of the MCU                        |
-| NO          | BL_SET_RW_PROTECT | 0xA9         | Error Code (1 byte)      | Enable or disable read/write protection of FLASH sectors |
+| IN PROGRESS | BL_SET_RW_PROTECT | 0xA9         | Error Code (1 byte)      | Enable or disable read/write protection of FLASH sectors |
