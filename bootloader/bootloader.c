@@ -73,6 +73,9 @@ void bootloader_start_interactive_mode(void)
         case BL_FLASH_ERASE:
             bootloader_cmd_flash_erase(rx_buffer);
             break;
+        case BL_MEM_WRITE:
+            bootloader_cmd_mem_write(rx_buffer);
+            break;
         case BL_MEM_READ:
             bootloader_cmd_mem_read(rx_buffer);
             break;
@@ -252,6 +255,35 @@ void bootloader_cmd_flash_erase(uint8_t *buffer)
         bootloader_send_ack(1);
 
         uint8_t status = bootloader_flash_erase(buffer[2], buffer[3]);
+        bootloader_send_data(&status, 1);
+    }
+    else
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum failed!\n");
+        bootloader_send_nack();
+    }
+}
+
+void bootloader_cmd_mem_write(uint8_t *buffer)
+{
+    uint32_t packet_length = buffer[0] + 1;
+    uint32_t host_crc = *(uint32_t *)(buffer + packet_length - 4);
+
+    debug_printf("BOOTLOADER_DEBUG: Called bootloader_cmd_mem_write.\n");
+
+    if (bootloader_verify_crc(buffer, packet_length - 4, host_crc) == CRC_STATUS_SUCCESS)
+    {
+        debug_printf("BOOTLOADER_DEBUG: CRC checksum approved!\n");
+
+        uint32_t base_address = *(uint32_t *)(buffer + 2);
+        uint8_t payload_size = buffer[6];
+
+        bootloader_send_ack(1);
+
+        flash_init();
+        flash_write(base_address, &buffer[7], payload_size);
+
+        uint8_t status = FLASH_SUCCESS;
         bootloader_send_data(&status, 1);
     }
     else
