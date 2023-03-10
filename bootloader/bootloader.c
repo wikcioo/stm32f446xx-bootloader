@@ -35,7 +35,7 @@ void bootloader_goto_application(void)
     __asm volatile("MSR MSP, %0"::"r"(msp));
 
     uint32_t reset_handler_addr = *(volatile uint32_t *)(FLASH_SECTOR_2_BASE_ADDR + 0x4);
-    void (*application_reset_handler)(void) = (void *)reset_handler_addr;
+    void (*application_reset_handler)(void) = (void (*)(void))reset_handler_addr;
 
     BL_LOG("Application reset handler address = 0x%08lX\n", (unsigned long)application_reset_handler);
     application_reset_handler();
@@ -225,7 +225,7 @@ void bootloader_cmd_jump_address(uint8_t *buffer)
             /* Ensure that the last bit in the address is set for it to be a THUMB instruction */
             jump_addr |= 1; 
 
-            void (*jump_address)(void) = (void *)jump_addr;
+            void (*jump_address)(void) = (void (*)(void))jump_addr;
             jump_address();
         }
         else
