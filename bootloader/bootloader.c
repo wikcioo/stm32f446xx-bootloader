@@ -79,6 +79,9 @@ void bootloader_start_interactive_mode(void)
         case BL_MEM_READ:
             bootloader_cmd_mem_read(rx_buffer);
             break;
+        case BL_SET_RW_PROTECT:
+            bootloader_cmd_set_rw_protect(rx_buffer);
+            break;
         default:
             BL_LOG("Error {Unknown command}\n");
         }
@@ -319,6 +322,46 @@ void bootloader_cmd_mem_read(uint8_t *buffer)
 
         BL_LOG("Flash read status: %s.\n", status == FLASH_SUCCESS ? "success" : "fail");
         bootloader_send_data(response_buffer, length + 1);
+    }
+    else
+    {
+        BL_LOG("CRC checksum failed!\n");
+        bootloader_send_nack();
+    }
+}
+
+void bootloader_cmd_set_rw_protect(uint8_t *buffer)
+{
+    uint32_t packet_length = buffer[0] + 1;
+    uint32_t host_crc = *(uint32_t *)(buffer + packet_length - 4);
+
+    BL_LOG("Called bootloader_cmd_set_rw_protect.\n");
+
+    if (bootloader_verify_crc(buffer, packet_length - 4, host_crc) == CRC_STATUS_SUCCESS)
+    {
+        BL_LOG("CRC checksum approved!\n");
+
+        bootloader_send_ack(1);
+
+        uint8_t sectors = buffer[2];
+        uint8_t prot_level = buffer[3];
+
+        char bin_sectors[sizeof(uint8_t) * 8 + 1];
+
+        for (uint8_t i = 0; i < sizeof(uint8_t) * 8; i++)
+        {
+            bin_sectors[i] = sectors >> ((sizeof(uint8_t) * 8) - i - 1) & 1 ? '1' : '0';
+        }
+
+        bin_sectors[sizeof(uint8_t) * 8] = '\0';
+
+        BL_LOG("Sectors: 0b%s, Protection Level: %02u\n", bin_sectors, prot_level);
+
+        flash_init();
+        flash_set_protection_level(prot_level, sectors);
+
+        uint8_t status = FLASH_SUCCESS;
+        bootloader_send_data(&status, 1);
     }
     else
     {

@@ -35,9 +35,11 @@
 #define BL_FLASH_ERASE      0xA6
 #define BL_MEM_WRITE        0xA7
 #define BL_MEM_READ         0xA8
+#define BL_SET_RW_PROTECT   0xA9
 
 uint8_t supported_commands[] = {
-    BL_GET_VER, BL_GET_HELP, BL_GET_DEV_ID, BL_GET_RDP_LEVEL, BL_JMP_ADDR, BL_FLASH_ERASE, BL_MEM_WRITE, BL_MEM_READ
+    BL_GET_VER, BL_GET_HELP, BL_GET_DEV_ID, BL_GET_RDP_LEVEL, BL_JMP_ADDR,
+    BL_FLASH_ERASE, BL_MEM_WRITE, BL_MEM_READ, BL_SET_RW_PROTECT
 };
 
 void bootloader_cmd_get_version(uint8_t *buffer);
@@ -48,6 +50,7 @@ void bootloader_cmd_jump_address(uint8_t *buffer);
 void bootloader_cmd_flash_erase(uint8_t *buffer);
 void bootloader_cmd_mem_write(uint8_t *buffer);
 void bootloader_cmd_mem_read(uint8_t *buffer);
+void bootloader_cmd_set_rw_protect(uint8_t *buffer);
 
 void bootloader_goto_application(void);
 void bootloader_start_interactive_mode(void);
