@@ -11,4 +11,4 @@
 | YES         | BL_FLASH_ERASE    | 0xA6         | Error Code (1 byte)      | Erase sector(s) of the FLASH                             |
 | YES         | BL_MEM_WRITE      | 0xA7         | Error Code (1 byte)      | Write to FLASH memory of the MCU                         |
 | YES         | BL_MEM_READ       | 0xA8         | Memory Content (x bytes) | Read from FLASH memory of the MCU                        |
-| IN PROGRESS | BL_SET_RW_PROTECT | 0xA9         | Error Code (1 byte)      | Enable or disable read/write protection of FLASH sectors |
+| YES         | BL_SET_RW_PROTECT | 0xA9         | Error Code (1 byte)      | Enable read/write protection of FLASH sectors            |
