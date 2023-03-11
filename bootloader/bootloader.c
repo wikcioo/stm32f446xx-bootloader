@@ -83,6 +83,9 @@ void bootloader_start_interactive_mode(void)
         case BL_SET_RW_PROTECT:
             bootloader_cmd_set_rw_protect(rx_buffer);
             break;
+        case BL_GET_RW_PROTECT:
+            bootloader_cmd_get_rw_protect(rx_buffer);
+            break;
         default:
             BL_LOG("Error {Unknown command}\n");
         }
@@ -363,6 +366,33 @@ void bootloader_cmd_set_rw_protect(uint8_t *buffer)
 
         uint8_t status = FLASH_SUCCESS;
         bootloader_send_data(&status, 1);
+    }
+    else
+    {
+        BL_LOG("CRC checksum failed!\n");
+        bootloader_send_nack();
+    }
+}
+
+void bootloader_cmd_get_rw_protect(uint8_t *buffer)
+{
+    uint32_t packet_length = buffer[0] + 1;
+    uint32_t host_crc = *(uint32_t *)(buffer + packet_length - 4);
+
+    BL_LOG("Called bootloader_cmd_get_rw_protect.\n");
+
+    if (bootloader_verify_crc(buffer, packet_length - 4, host_crc) == CRC_STATUS_SUCCESS)
+    {
+        BL_LOG("CRC checksum approved!\n");
+
+        bootloader_send_ack(8);
+
+        uint8_t prot_level[8] = {0};
+
+        flash_init();
+        flash_get_protection_level(prot_level);
+
+        bootloader_send_data(prot_level, 8);
     }
     else
     {
