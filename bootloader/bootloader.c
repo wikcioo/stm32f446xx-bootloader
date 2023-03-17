@@ -452,10 +452,12 @@ uint8_t bootloader_flash_erase(uint8_t base_sector_number, uint8_t num_of_sector
         return ERASE_SUCCESS;
     }
 
+    const uint8_t NUM_OF_FLASH_SECTORS = 8;
+
     if (
         base_sector_number < FLASH_SECTOR_0_NUMBER ||
         base_sector_number > FLASH_SECTOR_7_NUMBER ||
-        num_of_sectors > FLASH_SECTOR_7_NUMBER - base_sector_number)
+        num_of_sectors > NUM_OF_FLASH_SECTORS - base_sector_number)
     {
         BL_LOG("Incorrect parameters for flash erase.\n");
         return ERASE_FAILURE;
