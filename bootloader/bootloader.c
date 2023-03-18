@@ -318,7 +318,10 @@ void bootloader_cmd_mem_read(uint8_t *buffer)
 
         BL_LOG("Address: 0x%08lX, Length: %lu.\n", base_address, length);
 
-        uint8_t *response_buffer = (uint8_t *)malloc(length + 1);
+        // TODO: Find out why malloc doesn't work and fix it
+        // uint8_t *response_buffer = (uint8_t *)malloc(length + 1);
+        // Temporarily switch to allocating memory on the stack
+        uint8_t response_buffer[255] = {0};
 
         flash_init();
         uint8_t status = flash_read(base_address, &response_buffer[1], length);
