@@ -287,11 +287,20 @@ void bootloader_cmd_mem_write(uint8_t *buffer)
 
         bootloader_send_ack(1);
 
-        flash_init();
-        flash_write(base_address, &buffer[7], payload_size);
+        if (bootloader_verify_address(base_address) == VALID_ADDR)
+        {
+            flash_init();
+            flash_write(base_address, &buffer[7], payload_size);
 
-        uint8_t status = FLASH_SUCCESS;
-        bootloader_send_data(&status, 1);
+            uint8_t status = FLASH_SUCCESS;
+            bootloader_send_data(&status, 1);
+        }
+        else
+        {
+            BL_LOG("Invalid address!\n");
+            uint8_t status = FLASH_FAIL;
+            bootloader_send_data(&status, 1);
+        }
     }
     else
     {
